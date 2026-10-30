@@ -1,0 +1,228 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "User identity and credit balance.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "credits": { "type": "integer" },
+        "role": { "type": "string", "enum": ["user", "admin"] },
+        "plan": { "type": "string", "enum": ["free", "starter", "creator", "pro"] },
+        "planStatus": { "type": "string", "enum": ["active", "expired", "cancelled"] },
+        "billingCycle": { "type": "string", "enum": ["monthly", "yearly"] },
+        "totalProjects": { "type": "integer" },
+        "totalGenerations": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "credits", "role", "plan"]
+    },
+    "Setting": {
+      "title": "User Settings",
+      "description": "Global and studio-specific user preferences.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "appearance": { "type": "object" },
+        "ai": { "type": "object" },
+        "story": { "type": "object" },
+        "voice": { "type": "object" },
+        "video": { "type": "object" },
+        "character": { "type": "object" },
+        "background": { "type": "object" },
+        "timeline": { "type": "object" },
+        "notifications": { "type": "object" },
+        "privacy": { "type": "object" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "updatedAt"]
+    },
+    "Plan": {
+      "title": "Subscription Plan",
+      "description": "Definition of a subscription tier.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "priceMonthly": { "type": "integer" },
+        "priceYearly": { "type": "integer" },
+        "credits": { "type": "integer" },
+        "features": { "type": "array", "items": { "type": "string" } },
+        "limits": { "type": "object" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["id", "name", "priceMonthly", "credits", "active"]
+    },
+    "AdminConfig": {
+      "title": "Admin Configuration",
+      "description": "Global application settings controlled by admin.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "maintenanceMode": { "type": "boolean" },
+        "baseProPrice": { "type": "integer" },
+        "apiProviders": { "type": "object" },
+        "announcement": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "maintenanceMode"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "A creative production project.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "status": { "type": "string", "enum": ["draft", "active", "completed"] },
+        "thumbnailUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "name", "status"]
+    },
+    "Asset": {
+      "title": "Asset",
+      "description": "A saved creative asset (character, background, audio, etc.).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "projectId": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "url": { "type": "string" },
+        "metadata": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "name", "type", "url"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Credit audit log.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "amount": { "type": "integer" },
+        "type": { "type": "string", "enum": ["generation", "purchase", "refund", "welcome", "subscription"] },
+        "description": { "type": "string" },
+        "relatedId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "amount", "type", "createdAt"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "In-app alerts for users.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["success", "error", "info", "system"] },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "title", "message", "read", "createdAt"]
+    },
+    "Generation": {
+      "title": "Generation",
+      "description": "Log of AI generation requests.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "type": { "type": "string" },
+        "prompt": { "type": "string" },
+        "status": { "type": "string" },
+        "resultUrl": { "type": "string" },
+        "cost": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "type", "status"]
+    },
+    "VoicePreset": {
+      "title": "Voice Preset",
+      "description": "User-saved custom voice configurations.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "providerVoice": { "type": "string" },
+        "settings": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "name", "providerVoice"]
+    },
+    "ProjectVoiceMapping": {
+      "title": "Project Voice Mapping",
+      "description": "Assignments of voices to story characters for consistency.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "projectId": { "type": "string" },
+        "characterName": { "type": "string" },
+        "voiceId": { "type": "string" },
+        "settings": { "type": "object" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "projectId", "characterName", "voiceId"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Root user profiles."
+    },
+    "/settings/{userId}": {
+      "schema": "Setting",
+      "description": "User preferences."
+    },
+    "/plans/{planId}": {
+      "schema": "Plan",
+      "description": "Available subscription plans."
+    },
+    "/config/{configId}": {
+      "schema": "AdminConfig",
+      "description": "Global app configuration."
+    },
+    "/projects/{projectId}": {
+      "schema": "Project",
+      "description": "User production projects."
+    },
+    "/assets/{assetId}": {
+      "schema": "Asset",
+      "description": "Shared asset library."
+    },
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Credit history logs."
+    },
+    "/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "User notifications."
+    },
+    "/generations/{genId}": {
+      "schema": "Generation",
+      "description": "Generation activity log."
+    },
+    "/voicePresets/{presetId}": {
+      "schema": "VoicePreset",
+      "description": "Custom voice presets saved by users."
+    },
+    "/projects/{projectId}/voiceMappings/{mappingId}": {
+      "schema": "ProjectVoiceMapping",
+      "description": "Voice assignments for specific characters in a project."
+    }
+  }
+}

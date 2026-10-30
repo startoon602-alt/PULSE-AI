@@ -1,0 +1,103 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Helpers
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isEmailVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
+    function isAdmin() { return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'; }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    // Validation Helpers
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['uid', 'email', 'credits', 'role', 'plan']) &&
+             data.uid == request.auth.uid &&
+             data.credits is int &&
+             data.role in ['user', 'admin'] &&
+             data.plan in ['free', 'starter', 'creator', 'pro'];
+    }
+
+    function isValidProject(data) {
+      return data.keys().hasAll(['id', 'userId', 'name', 'status']) &&
+             data.userId == request.auth.uid &&
+             data.status in ['draft', 'active', 'completed'];
+    }
+
+    function isValidAsset(data) {
+      return data.keys().hasAll(['id', 'userId', 'name', 'type', 'url']) &&
+             data.userId == request.auth.uid;
+    }
+
+    function isValidSetting(data) {
+      return data.keys().hasAll(['userId', 'updatedAt']) &&
+             data.userId == request.auth.uid;
+    }
+
+    // 1. Users Collection
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && isValidUserProfile(incoming()) && incoming().role == 'user' && incoming().plan == 'free';
+      allow update: if (isOwner(userId) && (
+        // Action: Update Profile
+        (incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'updatedAt']))
+      )) || isAdmin();
+    }
+
+    // 2. Settings Collection
+    match /settings/{userId} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId) && isValidSetting(incoming());
+    }
+
+    // 3. Projects Collection
+    match /projects/{projectId} {
+      allow read: if isOwner(existing().userId) || isAdmin();
+      allow create: if isEmailVerified() && isValidProject(incoming());
+      allow update: if (isOwner(existing().userId) && isValidProject(incoming())) || isAdmin();
+      allow delete: if isOwner(existing().userId) || isAdmin();
+    }
+
+    // 4. Assets Collection
+    match /assets/{assetId} {
+      allow read: if isOwner(existing().userId) || isAdmin();
+      allow create: if isEmailVerified() && isValidAsset(incoming());
+      allow update: if (isOwner(existing().userId) && isValidAsset(incoming())) || isAdmin();
+      allow delete: if isOwner(existing().userId) || isAdmin();
+    }
+
+    // 5. Transactions Collection (System Controlled)
+    match /transactions/{txId} {
+      allow read: if isOwner(existing().userId) || isAdmin();
+      allow write: if isAdmin(); // Only admins/system can log transactions
+    }
+
+    // 6. Notifications Collection
+    match /notifications/{notifId} {
+      allow read: if isOwner(existing().userId);
+      allow update: if isOwner(existing().userId) && incoming().diff(existing()).affectedKeys().hasOnly(['read']);
+      allow delete: if isOwner(existing().userId);
+    }
+
+    // 7. Generations Collection
+    match /generations/{genId} {
+      allow read: if isOwner(existing().userId) || isAdmin();
+      allow create: if isEmailVerified() && incoming().userId == request.auth.uid;
+    }
+
+    // 8. Plans & Config (Publicly Readable, Admin Writable)
+    match /plans/{planId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+    match /config/{configId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+  }
+}

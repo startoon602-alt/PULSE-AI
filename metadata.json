@@ -1,0 +1,6 @@
+{
+  "name": "PULSE AI",
+  "description": "All-in-One AI Cartoon Production Studio for Hindi animations, moral stories, and creative content.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
